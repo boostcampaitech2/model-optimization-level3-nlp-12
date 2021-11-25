@@ -2,6 +2,8 @@
 - Author: Junghoon Kim, Jongsun Shin
 - Contact: placidus36@gmail.com, shinn1897@makinarocks.ai
 """
+import os
+import yaml
 import numpy as np
 import optuna
 import torch
@@ -19,9 +21,11 @@ import argparse
 
 EPOCH = 100
 DATA_PATH = "/opt/ml/data"  # type your data path here that contains test, train and val directories
-MODEL_SAVE_SUFFIX = 'random_4'
-RESULT_MODEL_PATH = f"./result_model_{MODEL_SAVE_SUFFIX}.pt" # result model will be saved in this path
 
+def get_last_num():
+    files = [file for file in os.listdir('tune_result') if 'pt' in file]
+    nums = max([file.split('_')[-2] for file in files])
+    return nums + 1
 
 def search_hyperparam(trial: optuna.trial.Trial) -> Dict[str, Any]:
     """Search hyperparam from user-specified search space."""
@@ -353,26 +357,37 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, float, float]:
         float: score1(e.g. accuracy)
         int: score2(e.g. params)
     """
-    # model_config: Dict[str, Any] = {}
-
-    # caution => trial model or mobilenetv3, squeezenet
+    # caution => random model or mobilenetv3 or squeezenet
+    model_config: Dict[str, Any] = {}
     # model_config = read_yaml(cfg='configs/model/mobilenetv3.yaml')
-    model_config = read_yaml(cfg='configs/model/squeezenet.yaml')
+    # model_config = read_yaml(cfg='configs/model/squeezenet.yaml')
+
+    if model_config:
+        model_name = 'custom_model'
+    else:
+        model_name = 'random_model'
 
     model_config["input_channel"] = 3
     model_config["depth_multiple"] = trial.suggest_categorical(
         "depth_multiple", [0.25, 0.5, 0.75, 1.0]
     )
+
     model_config["width_multiple"] = trial.suggest_categorical(
         "width_multiple", [0.25, 0.5, 0.75, 1.0]
     )
-    # model_config["backbone"], module_info = search_model(trial)
+    model_config["backbone"], module_info = search_model(trial)
     hyperparams = search_hyperparam(trial)
 
     # caution => should be same with
     # img_size = trial.suggest_categorical("img_size", [96, 112, 168, 224])
     # img_size = 32
     model_config["INPUT_SIZE"] = [hyperparams["IMG_SIZE"], hyperparams["IMG_SIZE"]]
+
+    # last_num = get_last_num()
+
+    # caution => save model_config.yml
+    with open(os.path.join('tune_result', f"{model_name}_{trial.number}trial.yml"), "w") as f:
+        yaml.dump(model_config, f, default_flow_style=False)
 
     model = Model(model_config, verbose=True)
 
@@ -431,7 +446,8 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, float, float]:
         scaler=scaler,
         device=device,
         verbose=1,
-        model_path=RESULT_MODEL_PATH, # caution => if use n-terminal, should be modified
+        model_path=os.path.join('tune_result', f"{model_name}_{trial.number}trial.pt"),
+        # caution => if use n-terminal, should be modified
     )
     trainer.train(train_loader, hyperparams["EPOCHS"], val_dataloader=val_loader)
     loss, f1_score, acc_percent = trainer.test(model, test_dataloader=val_loader)
@@ -513,13 +529,13 @@ def tune(gpu_id, storage: str = None):
     study = optuna.create_study(
         directions=["maximize", "minimize", "minimize"],
         # directions=["minimize"],
-        study_name="automl101",
+        study_name="space",
         sampler=sampler,
         storage=rdb_storage,
         load_if_exists=True,
     )
     # study.optimize(lambda trial: objective(trial, device), n_trials=500)
-    study.optimize(lambda trial: objective(trial, device), n_trials=10)
+    study.optimize(lambda trial: objective(trial, device), n_trials=5)
 
     pruned_trials = [
         t for t in study.trials if t.state == optuna.trial.TrialState.PRUNED

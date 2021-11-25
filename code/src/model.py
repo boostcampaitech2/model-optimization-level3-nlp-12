@@ -63,6 +63,9 @@ class ModelParser:
             with open(cfg) as f:
                 self.cfg = yaml.load(f, Loader=yaml.FullLoader)
 
+        print('===================== MODEL CONFIG =====================')
+        print(self.cfg)
+
         self.in_channel = self.cfg["input_channel"]
 
         self.depth_multiply = self.cfg["depth_multiple"]

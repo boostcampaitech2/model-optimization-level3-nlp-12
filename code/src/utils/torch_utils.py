@@ -65,7 +65,8 @@ def save_model(model, path, data, device):
         torch.save(model.state_dict(), f=path)
         ts_path = os.path.splitext(path)[:-1][0] + ".ts"
         convert_model_to_torchscript(model, ts_path)
-    except Exception:
+    except Exception as e:
+        print(e)
         print("Failed to save torch")
 
 
