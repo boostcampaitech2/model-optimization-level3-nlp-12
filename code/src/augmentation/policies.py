@@ -56,7 +56,7 @@ def simple_augment_test(
         ]
     )
 
-
+# caution => randomly choose augmentation techs
 def randaugment_train(
     dataset: str = "CIFAR10",
     img_size: float = 32,

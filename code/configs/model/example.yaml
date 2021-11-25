@@ -5,7 +5,7 @@ width_multiple: 1.0
 
 backbone:
     # Example model in PyTorch Tutorial (https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html)
-    # [repeat, module, args]
+    # [repeat, module, args] # caution => args = __init__ of each module
     [
         [1, Conv, [6, 5, 1, 0]],
         [1, MaxPool, [2]],

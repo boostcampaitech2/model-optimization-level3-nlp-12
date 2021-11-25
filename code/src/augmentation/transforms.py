@@ -26,6 +26,7 @@ FILLCOLOR_RGBA = (128, 128, 128, 128)
 def transforms_info() -> Dict[
     str, Tuple[Callable[[Image, float], Image], float, float]
 ]:
+    # caution => add new transformer (e.g) cutmix
     """Return augmentation functions and their ranges."""
     transforms_list = [
         (Identity, 0.0, 0.0),

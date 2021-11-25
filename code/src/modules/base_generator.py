@@ -71,6 +71,7 @@ class GeneratorAbstract(ABC):
         """
         return make_divisible(n_channel, divisor=cls.CHANNEL_DIVISOR)
 
+    # caution => below 2functions should be implemented
     @property
     @abstractmethod
     def out_channel(self) -> int:
@@ -98,4 +99,4 @@ class ModuleGenerator:
         return getattr(
             __import__("src.modules", fromlist=[""]),
             f"{self.module_name}Generator",
-        )(self.in_channel, *args, **kwargs)
+        )(self.in_channel, *args, **kwargs) # caution => common init of all modules

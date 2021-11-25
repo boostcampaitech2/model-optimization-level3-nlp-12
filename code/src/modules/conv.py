@@ -16,10 +16,11 @@ from src.utils.torch_utils import Activation, autopad
 class Conv(nn.Module):
     """Standard convolution with batch normalization and activation."""
 
+    # (e.g) model.append([1, "FixedConv", [6, 1, 1, None, 1, None]])
     def __init__(
         self,
-        in_channel: int,
-        out_channels: int,
+        in_channel: int, # caution => from previous out_channel
+        out_channels: int, # caution => a new one for next in_channel
         kernel_size: int,
         stride: int = 1,
         padding: Union[int, None] = None,
@@ -42,6 +43,7 @@ class Conv(nn.Module):
         super().__init__()
         # error: Argument "padding" to "Conv2d" has incompatible type "Union[int, List[int]]";
         # expected "Union[int, Tuple[int, int]]"
+        # caution => (N, C, H, W)
         self.conv = nn.Conv2d(
             in_channel,
             out_channels,
@@ -100,7 +102,7 @@ class ConvGenerator(GeneratorAbstract):
 
         return self._get_module(module)
 
-
+# caution => convert fixedconv to conv
 class FixedConvGenerator(GeneratorAbstract):
     """FixedConv2d generator for parsing module.
     Fixed Conv doesn't change out channel
@@ -143,44 +145,44 @@ class FixedConvGenerator(GeneratorAbstract):
         return self._get_module(module)
 
 
-class FixedConvGenerator(GeneratorAbstract):
-    """FixedConv2d generator for parsing module.
-
-    Fixed Conv doesn't change out channel
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    @property
-    def out_channel(self) -> int:
-        """Get out channel size."""
-        return int(self.args[0])
-
-    @property
-    def base_module(self) -> nn.Module:
-        """Returns module class from src.common_modules based on the class name."""
-        return getattr(
-            __import__("src.modules", fromlist=[""]), self.name.replace("Fixed", "")
-        )
-
-    def __call__(self, repeat: int = 1):
-        args = [self.in_channel, self.out_channel, *self.args[1:]]
-        if repeat > 1:
-            stride = 1
-            # Important!: stride only applies at the end of the repeat.
-            if len(args) > 2:
-                stride = args[3]
-                args[3] = 1
-
-            module = []
-            for i in range(repeat):
-                if len(args) > 1 and stride > 1 and i == repeat - 1:
-                    args[3] = stride
-
-                module.append(self.base_module(*args))
-                args[0] = self.out_channel
-        else:
-            module = self.base_module(*args)
-
-        return self._get_module(module)
+# class FixedConvGenerator(GeneratorAbstract):
+#     """FixedConv2d generator for parsing module.
+#
+#     Fixed Conv doesn't change out channel
+#     """
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#
+#     @property
+#     def out_channel(self) -> int:
+#         """Get out channel size."""
+#         return int(self.args[0])
+#
+#     @property
+#     def base_module(self) -> nn.Module:
+#         """Returns module class from src.common_modules based on the class name."""
+#         return getattr(
+#             __import__("src.modules", fromlist=[""]), self.name.replace("Fixed", "")
+#         )
+#
+#     def __call__(self, repeat: int = 1):
+#         args = [self.in_channel, self.out_channel, *self.args[1:]]
+#         if repeat > 1:
+#             stride = 1
+#             # Important!: stride only applies at the end of the repeat.
+#             if len(args) > 2:
+#                 stride = args[3]
+#                 args[3] = 1
+#
+#             module = []
+#             for i in range(repeat):
+#                 if len(args) > 1 and stride > 1 and i == repeat - 1:
+#                     args[3] = stride
+#
+#                 module.append(self.base_module(*args))
+#                 args[0] = self.out_channel
+#         else:
+#             module = self.base_module(*args)
+#
+#         return self._get_module(module)

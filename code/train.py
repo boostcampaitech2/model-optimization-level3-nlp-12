@@ -35,9 +35,11 @@ def train(
     with open(os.path.join(log_dir, "model.yml"), "w") as f:
         yaml.dump(model_config, f, default_flow_style=False)
 
+    # caution => load or new
     model_instance = Model(model_config, verbose=True)
     model_path = os.path.join(log_dir, "best.pt")
     print(f"Model save path: {model_path}")
+
     if os.path.isfile(model_path):
         model_instance.model.load_state_dict(
             torch.load(model_path, map_location=device)
@@ -47,7 +49,7 @@ def train(
     # Create dataloader
     train_dl, val_dl, test_dl = create_dataloader(data_config)
 
-    # Create optimizer, scheduler, criterion
+    # Create optimizer, scheduler, criterion => customize
     optimizer = torch.optim.SGD(
         model_instance.model.parameters(), lr=data_config["INIT_LR"], momentum=0.9
     )
@@ -80,6 +82,8 @@ def train(
         model_path=model_path,
         verbose=1,
     )
+
+    # caution => trainer.py
     best_acc, best_f1 = trainer.train(
         train_dataloader=train_dl,
         n_epoch=data_config["EPOCHS"],
@@ -102,11 +106,14 @@ if __name__ == "__main__":
         type=str,
         help="model config",
     )
+
+    # caution => epochs 100 (default)
     parser.add_argument(
         "--data", default="configs/data/taco.yaml", type=str, help="data config"
     )
     args = parser.parse_args()
 
+    # caution => config from yml
     model_config = read_yaml(cfg=args.model)
     data_config = read_yaml(cfg=args.data)
 

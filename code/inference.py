@@ -59,7 +59,7 @@ def get_dataloader(img_root: str, data_config: str) -> DataLoader:
     # Transformation for test
     transform_test = getattr(
         __import__("src.augmentation.policies", fromlist=[""]),
-        data_config["AUG_TEST"],
+        data_config["AUG_TEST"], # caution => simple_augment_test (default)
     )(dataset=data_config["DATASET"], img_size=data_config["IMG_SIZE"])
 
     dataset = CustomImageFolder(root=img_root, transform=transform_test)
@@ -80,6 +80,9 @@ def inference(model, dataloader, dst_path: str, t0: float) -> None:
     """
     model = model.to(device)
     model.eval()
+
+    print('================ MODEL ARCHI ================')
+    print(model)
 
     profile_ = torch.rand(1, 3, 512, 512).to(device)
     for transform in dataloader.dataset.transform.transforms:
@@ -148,7 +151,8 @@ if __name__ == "__main__":
         default=os.environ.get('SM_OUTPUT_DATA_DIR')
     )
     parser.add_argument("--model_dir", type=str, help="Saved model root directory which includes 'best.pt', 'data.yml', and, 'model.yml'", default='/opt/ml/code/exp/latest')
-    parser.add_argument("--weight_name", type=str, help="Model weight file name. (best.pt, best.ts, ...)", default="best.pt")
+    # parser.add_argument("--weight_name", type=str, help="best.pt", default="best.pt")
+    parser.add_argument("--weight_name", type=str, help="best.ts", default="best.ts")
     parser.add_argument(
         "--img_root",
         type=str,
@@ -159,7 +163,7 @@ if __name__ == "__main__":
     assert args.model_dir != '' and args.img_root != '', "'--model_dir' and '--img_root' must be provided."
 
     args.weight = os.path.join(args.model_dir, args.weight_name)
-    args.model_config = os.path.join(args.model_dir, "model.yml")
+    # args.model_config = os.path.join(args.model_dir, "model.yml")
     args.data_config = os.path.join(args.model_dir, "data.yml")
 
     t0 = time.monotonic()
@@ -169,7 +173,7 @@ if __name__ == "__main__":
     dataloader = get_dataloader(img_root=args.img_root, data_config=args.data_config)
 
     # prepare model
-    if args.weight.endswith("ts"):
+    if args.weight.endswith("ts"): # caution => if you don't have yml files, but ts
         model = torch.jit.load(args.weight)
     else:
         model_instance = Model(args.model_config, verbose=True)

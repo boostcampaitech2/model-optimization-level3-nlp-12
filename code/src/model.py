@@ -18,7 +18,7 @@ class Model(nn.Module):
 
     def __init__(
         self,
-        cfg: Union[str, Dict[str, Type]] = "./model_configs/show_case.yaml",
+        cfg: Union[str, Dict[str, Type]] = "./model_configs/show_case.yaml", # caution
         verbose: bool = False,
     ) -> None:
         """Parse model from the model config file.
@@ -71,6 +71,7 @@ class ModelParser:
         # error: Incompatible types in assignment (expression has type "Type[Any]",
         # variable has type "List[Union[int, str, float]]")
         self.model_cfg: List[Union[int, str, float]] = self.cfg["backbone"]  # type: ignore
+        # caution => code/configs/model/example.yaml
 
         self.model = self._parse_model()
 
@@ -95,6 +96,7 @@ class ModelParser:
                 max(round(repeat * self.depth_multiply), 1) if repeat > 1 else repeat
             )
 
+            # caution => code/src/modules/base_generator.py
             module_generator = ModuleGenerator(module, in_channel)(  # type: ignore
                 *args,
                 width_multiply=self.width_multiply,
@@ -102,7 +104,7 @@ class ModelParser:
             m = module_generator(repeat=repeat)
 
             layers.append(m)
-            in_channel = module_generator.out_channel
+            in_channel = module_generator.out_channel # caution => current out = next in
 
             log = (
                 f"{i:3d} | {repeat:3d} | "

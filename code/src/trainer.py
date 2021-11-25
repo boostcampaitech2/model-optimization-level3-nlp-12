@@ -138,6 +138,7 @@ class TorchTrainer:
                 data, labels = data.to(self.device), labels.to(self.device)
 
                 if self.scaler:
+                    # caution => using fp16 + fp32 for efficiency in speed and correctness
                     with torch.cuda.amp.autocast():
                         outputs = self.model(data)
                 else:

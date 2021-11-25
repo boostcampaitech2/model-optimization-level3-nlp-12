@@ -16,7 +16,7 @@ from torchvision.datasets import ImageFolder, VisionDataset
 
 from src.utils.data import weights_for_balanced_classes
 from src.utils.torch_utils import split_dataset_index
-
+from sklearn.model_selection import train_test_split
 
 def create_dataloader(
     config: Dict[str, Any],
@@ -37,7 +37,7 @@ def create_dataloader(
         dataset_name=config["DATASET"],
         img_size=config["IMG_SIZE"],
         val_ratio=config["VAL_RATIO"],
-        transform_train=config["AUG_TRAIN"],
+        transform_train=config["AUG_TRAIN"], # caution => original + augmentation
         transform_test=config["AUG_TEST"],
         transform_train_params=config["AUG_TRAIN_PARAMS"],
         transform_test_params=config.get("AUG_TEST_PARAMS"),
@@ -88,6 +88,16 @@ def get_dataset(
         val_dataset = ImageFolder(root=val_path, transform=transform_test)
         test_dataset = ImageFolder(root=test_path, transform=transform_test)
 
+        # caution => reduce train_dataset
+        # train_dataset, dump_dataset = train_test_split(
+        #     train_dataset,
+        #     train_size=0.4,
+        #     shuffle=True,
+        #     stratify=train_dataset.targets
+        # )
+        #
+        # train_dataset = torch.utils.data.Subset(train_dataset, range(len(train_dataset)))
+
     else:
         Dataset = getattr(
             __import__("torchvision.datasets", fromlist=[""]), dataset_name
@@ -96,7 +106,7 @@ def get_dataset(
             root=data_path, train=True, download=True, transform=transform_train
         )
         # from train dataset, train: 80%, val: 20%
-        train_length = int(len(train_dataset) * (1.0-val_ratio))
+        train_length = int(len(train_dataset) * (1.0-val_ratio)) # caution => val_ratio = 0.8
         train_dataset, val_dataset = random_split(
             train_dataset, [train_length, len(train_dataset) - train_length]
         )
