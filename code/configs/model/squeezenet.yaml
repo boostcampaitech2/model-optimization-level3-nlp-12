@@ -8,13 +8,13 @@ backbone:
     # 1_1 version => https://github.com/pytorch/vision/blob/main/torchvision/models/squeezenet.py
     [
         [1, Conv, [64, 3, 2, [0]]], # (out_channel, kernel_size, stride, padding)
-        [1, MaxPool, [3, 2, True]],
+        [1, MaxPool, [3, 2, 0, 1, False, True]],
         [1, Fire, [16, 64, 64]], # (squeeze_planes, expand1x1_planes, expand3x3_planes)
         [1, Fire, [16, 64, 64]],
-        [1, MaxPool, [3, 2, True]],
+        [1, MaxPool, [3, 2, 0, 1, False, True]],
         [1, Fire, [32, 128, 128]],
         [1, Fire, [32, 128, 128]],
-        [1, MaxPool, [3, 2, True]],
+        [1, MaxPool, [3, 2, 0, 1, False, True]],
         [1, Fire, [48, 192, 192]],
         [1, Fire, [48, 192, 192]],
         [1, Fire, [64, 256, 256]],
