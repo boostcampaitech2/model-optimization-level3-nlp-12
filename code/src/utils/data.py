@@ -37,4 +37,4 @@ def weights_for_balanced_classes(subset, nclasses):
     weight = [0] * len(images)                                              
     for idx, val in enumerate(images):                                          
         weight[idx] = weight_per_class[val[1]]                                  
-    return weightget_rand_bbox_coord
+    return weight
