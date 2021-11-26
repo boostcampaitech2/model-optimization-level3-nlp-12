@@ -7,8 +7,10 @@ import yaml
 import numpy as np
 import optuna
 import torch
+import torchvision
 import torch.nn as nn
 import torch.optim as optim
+from src.loss import CustomCriterion
 from src.dataloader import create_dataloader
 from src.model import Model
 from src.utils.torch_utils import model_info, check_runtime
@@ -16,8 +18,10 @@ from src.trainer import TorchTrainer, count_model_params
 from typing import Any, Dict, List, Tuple
 from optuna.pruners import HyperbandPruner
 from subprocess import _args_from_interpreter_flags
-from src.utils.common import read_yaml
+from src.utils.common import read_yaml, get_label_counts
 import argparse
+
+from efficientnet_pytorch import EfficientNet
 
 EPOCH = 100
 DATA_PATH = "/opt/ml/data"  # type your data path here that contains test, train and val directories
@@ -358,9 +362,9 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, float, float]:
         int: score2(e.g. params)
     """
     # caution => random model or mobilenetv3 or squeezenet
-    model_config: Dict[str, Any] = {}
+    # model_config: Dict[str, Any] = {}
     # model_config = read_yaml(cfg='configs/model/mobilenetv3.yaml')
-    # model_config = read_yaml(cfg='configs/model/squeezenet.yaml')
+    model_config = read_yaml(cfg='configs/model/squeezenet.yaml')
 
     if model_config:
         model_name = 'custom_model'
@@ -375,7 +379,7 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, float, float]:
     model_config["width_multiple"] = trial.suggest_categorical(
         "width_multiple", [0.25, 0.5, 0.75, 1.0]
     )
-    model_config["backbone"], module_info = search_model(trial)
+    # model_config["backbone"], module_info = search_model(trial)
     hyperparams = search_hyperparam(trial)
 
     # caution => should be same with
@@ -386,17 +390,20 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, float, float]:
     # last_num = get_last_num()
 
     # caution => save model_config.yml
-    with open(os.path.join('tune_result', f"{model_name}_{trial.number}trial.yml"), "w") as f:
-        yaml.dump(model_config, f, default_flow_style=False)
-
-    model = Model(model_config, verbose=True)
+    # with open(os.path.join('tune_result', f"{model_name}_{trial.number}trial.yml"), "w") as f:
+    #     yaml.dump(model_config, f, default_flow_style=False)
+    #
+    # model = Model(model_config, verbose=True)
 
     # print('================== MODEL ARCHI ==================')
     # print(model)
     # exit()
 
+    # caution => from torchvision
+    # model = torchvision.models.shufflenet_v2_x0_5()
+    model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=6)
     model.to(device)
-    model.model.to(device)
+    # model.model.to(device)
 
     # check ./data_configs/data.yaml for config information
     data_config: Dict[str, Any] = {}
@@ -413,24 +420,37 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, float, float]:
     data_config["IMG_SIZE"] = hyperparams["IMG_SIZE"]
 
     mean_time = check_runtime(
-        model.model,
+        # model.model,
+        model,
         [model_config["input_channel"]] + model_config["INPUT_SIZE"],
         device,
     )
     model_info(model, verbose=True)
     train_loader, val_loader, test_loader = create_dataloader(data_config)
 
-    criterion = nn.CrossEntropyLoss()
+    # caution => CE or CustomCriterion
+    # criterion = nn.CrossEntropyLoss()
+    criterion = CustomCriterion(
+        samples_per_cls=get_label_counts(data_config["DATA_PATH"])
+        if data_config["DATASET"] == "TACO"
+        else None,
+        device=device,
+    )
 
     # caution => customize optimizer and scheduler
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+    # optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    optimizer = torch.optim.AdamW(model.parameters())
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer,
-        max_lr=0.1,
-        steps_per_epoch=len(train_loader),
-        epochs=hyperparams["EPOCHS"],
-        pct_start=0.05,
+        T_max=(len(train_loader) // hyperparams['BATCH_SIZE']) * hyperparams['EPOCHS']
     )
+    # scheduler = torch.optim.lr_scheduler.OneCycleLR(
+    #     optimizer,
+    #     max_lr=0.1,
+    #     steps_per_epoch=len(train_loader),
+    #     epochs=hyperparams["EPOCHS"],
+    #     pct_start=0.05,
+    # )
 
     # caution => gradscaler should be added
     scaler = (

@@ -84,6 +84,7 @@ def inference(model, dataloader, dst_path: str, t0: float) -> None:
     print('================ MODEL ARCHI ================')
     print(model)
 
+    # caution => convert to comment while uploading
     profile_ = torch.rand(1, 3, 512, 512).to(device)
     for transform in dataloader.dataset.transform.transforms:
         if isinstance(transform, Resize):
@@ -150,9 +151,11 @@ if __name__ == "__main__":
         "--dst", type=str, help="destination path for submit",
         default=os.environ.get('SM_OUTPUT_DATA_DIR')
     )
-    parser.add_argument("--model_dir", type=str, help="Saved model root directory which includes 'best.pt', 'data.yml', and, 'model.yml'", default='/opt/ml/code/exp/latest')
-    # parser.add_argument("--weight_name", type=str, help="best.pt", default="best.pt")
+    parser.add_argument("--model_dir", type=str, help="'best.pt', 'data.yml', 'model.yml'", default='/opt/ml/code/exp/latest')
+    # parser.add_argument("--model_dir", type=str, help="", default='/opt/ml/code/tune_result')
+    # parser.add_argument("--weight_name", type=str, help="best.pt", default="result_model_random_1.pt")
     parser.add_argument("--weight_name", type=str, help="best.ts", default="best.ts")
+    # parser.add_argument("--weight_name", type=str, help="best.pt", default="best.pt")
     parser.add_argument(
         "--img_root",
         type=str,
@@ -163,7 +166,7 @@ if __name__ == "__main__":
     assert args.model_dir != '' and args.img_root != '', "'--model_dir' and '--img_root' must be provided."
 
     args.weight = os.path.join(args.model_dir, args.weight_name)
-    # args.model_config = os.path.join(args.model_dir, "model.yml")
+    # args.model_config = os.path.join(args.model_dir, "model_random_1_41.yml")
     args.data_config = os.path.join(args.model_dir, "data.yml")
 
     t0 = time.monotonic()
@@ -177,11 +180,10 @@ if __name__ == "__main__":
         model = torch.jit.load(args.weight)
     else:
         model_instance = Model(args.model_config, verbose=True)
-        model_instance.model.load_state_dict(
+        model_instance.load_state_dict(
             torch.load(args.weight, map_location=torch.device("cpu"))
         )
         model = model_instance.model
 
     # inference
     inference(model, dataloader, args.dst, t0)
-

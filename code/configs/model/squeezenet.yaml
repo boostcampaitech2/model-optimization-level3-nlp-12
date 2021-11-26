@@ -7,7 +7,7 @@ backbone:
     # [repeat, module, args]
     # 1_1 version => https://github.com/pytorch/vision/blob/main/torchvision/models/squeezenet.py
     [
-        [1, Conv, [64, 3, 2, [0]]], # (out_channel, kernel_size, stride, padding)
+        [1, Conv, [64, 3, 2, null, 1, "ReLU"]], # (out_channel, kernel_size, stride, padding)
         [1, MaxPool, [3, 2, 0, 1, False, True]],
         [1, Fire, [16, 64, 64]], # (squeeze_planes, expand1x1_planes, expand3x3_planes)
         [1, Fire, [16, 64, 64]],
@@ -20,6 +20,8 @@ backbone:
         [1, Fire, [64, 256, 256]],
         [1, Fire, [64, 256, 256]],
         [1, Dropout, [0.5]],
-        [1, Conv, [6, 1, 1, [0]]], # (out_channel, kernel_size, stride, padding)
-        [1, GlobalAvgPool, []] # nn.AdaptiveAvgPool2d((1, 1))
+#        [1, Conv, [256, 1, 1, null, 1, "ReLU"]], # (out_channel, kernel_size, stride, padding)
+        [1, GlobalAvgPool, []], # nn.AdaptiveAvgPool2d((1, 1))
+        [1, Flatten, []],
+        [1, Linear, [6]]
     ]
