@@ -54,6 +54,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
     MAX_NUM_STRIDE = 5
     UPPER_STRIDE = 2  # 5(224 example): 224, 112, 56, 28, 14, 7
 
+    # caution => add modules like MBConv
     # Module 1
     m1 = trial.suggest_categorical("m1", ["Conv", "DWConv"])
     m1_args = []
@@ -73,7 +74,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 2
     m2 = trial.suggest_categorical(
-        "m2", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
+        "m2", ["Conv", "DWConv", "MBConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
     )
     m2_args = []
     m2_repeat = trial.suggest_int("m2/repeat", 1, 5)
@@ -108,6 +109,12 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m2_hs = trial.suggest_categorical("m2/v3_hs", [0, 1])
         # k t c SE HS s
         m2_args = [m2_kernel, m2_t, m2_c, m2_se, m2_hs, m2_stride]
+    elif m2 == 'MBConv':
+        m2_out_planes = trial.suggest_int('m2/out_planes', low=16, high=128, step=16)
+        m2_expand = trial.suggest_int('m2/expand', low=1, high=4, step=3)
+        m2_kernel = trial.suggest_int('m2/kernel', low=3, high=5, step=2)
+        m2_stride = trial.suggest_int("m2/stride", low=1, high=UPPER_STRIDE)
+        m2_args = [m2_expand, m2_out_planes, m2_stride, m2_kernel]
     if not m2 == "Pass":
         if m2_stride == 2:
             n_stride += 1
@@ -117,7 +124,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 3
     m3 = trial.suggest_categorical(
-        "m3", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
+        "m3", ["Conv", "DWConv", "MBConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
     )
     m3_args = []
     m3_repeat = trial.suggest_int("m3/repeat", 1, 5)
@@ -149,6 +156,12 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m3_se = trial.suggest_categorical("m3/v3_se", [0, 1])
         m3_hs = trial.suggest_categorical("m3/v3_hs", [0, 1])
         m3_args = [m3_kernel, m3_t, m3_c, m3_se, m3_hs, m3_stride]
+    elif m3 == 'MBConv':
+        m3_out_planes = trial.suggest_int('m3/out_planes', low=16, high=128, step=16)
+        m3_expand = trial.suggest_int('m3/expand', low=1, high=4, step=3)
+        m3_kernel = trial.suggest_int('m3/kernel', low=3, high=5, step=2)
+        m3_stride = trial.suggest_int("m3/stride", low=1, high=UPPER_STRIDE)
+        m3_args = [m3_expand, m3_out_planes, m3_stride, m3_kernel]
     if not m3 == "Pass":
         if m3_stride == 2:
             n_stride += 1
@@ -158,7 +171,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 4
     m4 = trial.suggest_categorical(
-        "m4", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
+        "m4", ["Conv", "DWConv", "MBConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
     )
     m4_args = []
     m4_repeat = trial.suggest_int("m4/repeat", 1, 5)
@@ -193,6 +206,12 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m4_se = trial.suggest_categorical("m4/v3_se", [0, 1])
         m4_hs = trial.suggest_categorical("m4/v3_hs", [0, 1])
         m4_args = [m4_kernel, m4_t, m4_c, m4_se, m4_hs, m4_stride]
+    elif m4 == 'MBConv':
+        m4_out_planes = trial.suggest_int('m4/out_planes', low=16, high=128, step=16)
+        m4_expand = trial.suggest_int('m4/expand', low=1, high=4, step=3)
+        m4_kernel = trial.suggest_int('m4/kernel', low=3, high=5, step=2)
+        m4_stride = trial.suggest_int("m4/stride", low=1, high=UPPER_STRIDE)
+        m4_args = [m4_expand, m4_out_planes, m4_stride, m4_kernel]
     if not m4 == "Pass":
         if m4_stride == 2:
             n_stride += 1
@@ -202,7 +221,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 5
     m5 = trial.suggest_categorical(
-        "m5", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
+        "m5", ["Conv", "DWConv", "MBConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
     )
     m5_args = []
     m5_repeat = trial.suggest_int("m5/repeat", 1, 5)
@@ -238,6 +257,12 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m5_hs = trial.suggest_categorical("m5/v3_hs", [0, 1])
         m5_stride = trial.suggest_int("m5/stride", low=1, high=UPPER_STRIDE)
         m5_args = [m5_kernel, m5_t, m5_c, m5_se, m5_hs, m5_stride]
+    elif m5 == 'MBConv':
+        m5_out_planes = trial.suggest_int('m5/out_planes', low=16, high=128, step=16)
+        m5_expand = trial.suggest_int('m5/expand', low=1, high=4, step=3)
+        m5_kernel = trial.suggest_int('m5/kernel', low=3, high=5, step=2)
+        m5_stride = trial.suggest_int("m5/stride", low=1, high=UPPER_STRIDE)
+        m5_args = [m5_expand, m5_out_planes, m5_stride, m5_kernel]
     if not m5 == "Pass":
         if m5_stride == 2:
             n_stride += 1
@@ -247,7 +272,7 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
 
     # Module 6
     m6 = trial.suggest_categorical(
-        "m6", ["Conv", "DWConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
+        "m6", ["Conv", "DWConv", "MBConv", "InvertedResidualv2", "InvertedResidualv3", "Pass"]
     )
     m6_args = []
     m6_repeat = trial.suggest_int("m6/repeat", 1, 5)
@@ -282,6 +307,12 @@ def search_model(trial: optuna.trial.Trial) -> List[Any]:
         m6_se = trial.suggest_categorical("m6/v3_se", [0, 1])
         m6_hs = trial.suggest_categorical("m6/v3_hs", [0, 1])
         m6_args = [m6_kernel, m6_t, m6_c, m6_se, m6_hs, m6_stride]
+    elif m6 == 'MBConv':
+        m6_out_planes = trial.suggest_int('m6/out_planes', low=16, high=128, step=16)
+        m6_expand = trial.suggest_int('m6/expand', low=1, high=4, step=3)
+        m6_kernel = trial.suggest_int('m6/kernel', low=3, high=5, step=2)
+        m6_stride = trial.suggest_int("m6/stride", low=1, high=UPPER_STRIDE)
+        m6_args = [m6_expand, m6_out_planes, m6_stride, m6_kernel]
     if not m6 == "Pass":
         if m6_stride == 2:
             n_stride += 1
@@ -362,9 +393,9 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, float, float]:
         int: score2(e.g. params)
     """
     # caution => random model or mobilenetv3 or squeezenet
-    # model_config: Dict[str, Any] = {}
+    model_config: Dict[str, Any] = {}
     # model_config = read_yaml(cfg='configs/model/mobilenetv3.yaml')
-    model_config = read_yaml(cfg='configs/model/squeezenet.yaml')
+    # model_config = read_yaml(cfg='configs/model/squeezenet.yaml')
 
     if model_config:
         model_name = 'custom_model'
@@ -379,7 +410,7 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, float, float]:
     model_config["width_multiple"] = trial.suggest_categorical(
         "width_multiple", [0.25, 0.5, 0.75, 1.0]
     )
-    # model_config["backbone"], module_info = search_model(trial)
+    model_config["backbone"], module_info = search_model(trial)
     hyperparams = search_hyperparam(trial)
 
     # caution => should be same with
@@ -390,10 +421,10 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, float, float]:
     # last_num = get_last_num()
 
     # caution => save model_config.yml
-    # with open(os.path.join('tune_result', f"{model_name}_{trial.number}trial.yml"), "w") as f:
-    #     yaml.dump(model_config, f, default_flow_style=False)
-    #
-    # model = Model(model_config, verbose=True)
+    with open(os.path.join('tune_result', f"{model_name}_{trial.number}trial.yml"), "w") as f:
+        yaml.dump(model_config, f, default_flow_style=False)
+
+    model = Model(model_config, verbose=True)
 
     # print('================== MODEL ARCHI ==================')
     # print(model)
@@ -401,9 +432,9 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, float, float]:
 
     # caution => from torchvision
     # model = torchvision.models.shufflenet_v2_x0_5()
-    model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=6)
+    # model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=6)
     model.to(device)
-    # model.model.to(device)
+    model.model.to(device)
 
     # check ./data_configs/data.yaml for config information
     data_config: Dict[str, Any] = {}
@@ -420,8 +451,8 @@ def objective(trial: optuna.trial.Trial, device) -> Tuple[float, float, float]:
     data_config["IMG_SIZE"] = hyperparams["IMG_SIZE"]
 
     mean_time = check_runtime(
-        # model.model,
-        model,
+        model.model,
+        # model,
         [model_config["input_channel"]] + model_config["INPUT_SIZE"],
         device,
     )
@@ -549,7 +580,7 @@ def tune(gpu_id, storage: str = None):
     study = optuna.create_study(
         directions=["maximize", "minimize", "minimize"],
         # directions=["minimize"],
-        study_name="space",
+        study_name="space-example",
         sampler=sampler,
         storage=rdb_storage,
         load_if_exists=True,

@@ -1,5 +1,6 @@
 """PyTorch Module and ModuleGenerator."""
 
+from src.modules.mbconv import MBConv, MBConvGenerator
 from src.modules.dropout import DropoutGenerator
 from src.modules.fire import Fire, FireGenerator
 from src.modules.base_generator import GeneratorAbstract, ModuleGenerator
@@ -17,9 +18,11 @@ from src.modules.poolings import (AvgPoolGenerator, GlobalAvgPool,
 
 # caution => enroll your custom module
 __all__ = [
-    "DropoutGenerator"
+    "MBConv",
+    "MBConvGenerator",
+    "DropoutGenerator",
     "Fire",
-    "FireGenerator"
+    "FireGenerator",
     "ModuleGenerator",
     "GeneratorAbstract",
     "Bottleneck",
